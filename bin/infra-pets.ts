@@ -1,20 +1,32 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import { InfraPetsStack } from '../lib/infra-pets-stack';
+import { AcmStack } from '../lib/acmStack';
+import { BucketStack } from '../lib/bucketStack';
+import { ApiStack } from '../lib/apiStack';
+import { DynamoDbFoundationsStack } from '../lib/foundationStack/DynamoDbStack';
+import { DynamoDbPetsStack } from '../lib/petStack/DynamoDbStack';
+import { SnsPetsStack } from '../lib/petStack/SnsStack';
+
+const { CDK_DEFAULT_ACCOUNT } = process.env;
+
+/**
+ * Configuration
+ */
+const PROD_ACCOUNT = '-'
+const isProduction = CDK_DEFAULT_ACCOUNT === PROD_ACCOUNT;
+const domainName = 'alegra.com';
+const apiSubDomainName = 'joss-training';
+const hostedZoneId = 'Z08550371LSRDHZQNR9OM';
+const envEU = { region: 'us-east-1', account: CDK_DEFAULT_ACCOUNT };
 
 const app = new cdk.App();
-new InfraPetsStack(app, 'InfraPetsStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
+new InfraPetsStack(app, 'InfraPetsStack', {});
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+new AcmStack(app, 'acm', { env: envEU, domainName, hostedZoneId });
+new BucketStack(app, 'bucket', {});
+new ApiStack(app, 'api', {});
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
-
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
-});
+new DynamoDbFoundationsStack(app, 'dynamoDbFoundations', {});
+new DynamoDbPetsStack(app, 'dynamoDbPets', {});
+new SnsPetsStack(app, 'notificationPets', {});
